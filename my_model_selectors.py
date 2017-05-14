@@ -74,10 +74,47 @@ class SelectorBIC(ModelSelector):
 
         :return: GaussianHMM object
         """
+        
+        # great forum resources to inform development
+        # https://discussions.udacity.com/t/verifing-bic-calculation/246165/2
+        # https://discussions.udacity.com/t/number-of-parameters-bic-calculation/233235/14
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on BIC scores
-        raise NotImplementedError
+        # initialize variables with score being the largest possible number
+        best_score= float('inf')
+        best_model= None
+        
+        # establish range of number of components
+        min_components= self.min_components
+        max_components= self.max_n_components
+        
+        # get other attributes we need for BIC calculation
+        num_features= len(self.X[0])
+        N= np.sum(self.lengths)
+        logN= np.log(N)
+        
+        for components in range(min_components, max_components):
+            try:
+                model= self.base_model #GaussianHMM
+                logL= model.score(self.X, self.lengths)
+            
+                # calculate parameters 
+                p= (n**2) + 2 * num_features * n - 1
+            
+                # calculate BIC
+                score= -2 * logL + p * logN
+            
+                # update score and model that generated score
+                if score < best_score:
+                    best_score= score
+                    best_model= model
+            
+            else:
+                print("failure on {}".format(self.this_word))
+
+            return best_model
+            
+          
 
 
 class SelectorDIC(ModelSelector):
