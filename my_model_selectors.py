@@ -73,48 +73,52 @@ class SelectorBIC(ModelSelector):
         BIC score for n between self.min_n_components and self.max_n_components
 
         :return: GaussianHMM object
+		
+		- great forum resources to inform development
+        - https://discussions.udacity.com/t/verifing-bic-calculation/246165/2
+        - https://discussions.udacity.com/t/number-of-parameters-bic-calculation/233235/14
         """
-        
-        # great forum resources to inform development
-        # https://discussions.udacity.com/t/verifing-bic-calculation/246165/2
-        # https://discussions.udacity.com/t/number-of-parameters-bic-calculation/233235/14
         warnings.filterwarnings("ignore", category=DeprecationWarning)
+		
+		
+
 
         # initialize variables with score being the largest possible number
-        best_score= float('inf')
+        best_score= float("inf")
         best_model= None
-        
-        # establish range of number of components
-        min_components= self.min_components
-        max_components= self.max_n_components
         
         # get other attributes we need for BIC calculation
         num_features= len(self.X[0])
         N= np.sum(self.lengths)
         logN= np.log(N)
-        
-        for components in range(min_components, max_components):
+      
+        for component in range(self.min_n_components, self.max_n_components + 1):
             try:
-                model= self.base_model #GaussianHMM
+                
+                # get model and log likelihood
+                model= self.base_model(component) #GaussianHMM
                 logL= model.score(self.X, self.lengths)
-            
-                # calculate parameters 
-                p= (n**2) + 2 * num_features * n - 1
-            
+
+                # calculate parameters
+                p= (component**2) + 2 * num_features * component - 1
+
                 # calculate BIC
                 score= -2 * logL + p * logN
-            
+
                 # update score and model that generated score
                 if score < best_score:
                     best_score= score
                     best_model= model
-            
-            else:
-                print("failure on {}".format(self.this_word))
 
-            return best_model
-            
-          
+            except:
+                print("failure on {} @ {}".format(self.this_word, component))
+
+        return best_model
+        
+        
+        
+        
+        
 
 
 class SelectorDIC(ModelSelector):
