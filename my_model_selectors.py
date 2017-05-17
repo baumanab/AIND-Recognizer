@@ -73,34 +73,31 @@ class SelectorBIC(ModelSelector):
         BIC score for n between self.min_n_components and self.max_n_components
 
         :return: GaussianHMM object
-		
+
 		- great forum resources to inform development
         - https://discussions.udacity.com/t/verifing-bic-calculation/246165/2
         - https://discussions.udacity.com/t/number-of-parameters-bic-calculation/233235/14
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-		
-		
-
 
         # initialize variables with score being the largest possible number
         best_score= float("inf")
         best_model= None
-        
+
         # get other attributes we need for BIC calculation
         num_features= len(self.X[0])
         N= np.sum(self.lengths)
         logN= np.log(N)
-      
-        for component in range(self.min_n_components, self.max_n_components + 1):
+
+        for component_num in range(self.min_n_components, self.max_n_components + 1):
             try:
-                
+
                 # get model and log likelihood
-                model= self.base_model(component) #GaussianHMM
+                model= self.base_model(component_num) #GaussianHMM
                 logL= model.score(self.X, self.lengths)
 
                 # calculate parameters
-                p= (component**2) + 2 * num_features * component - 1
+                p= (component_num**2) + 2 * num_features * component_num - 1
 
                 # calculate BIC
                 score= -2 * logL + p * logN
@@ -111,14 +108,14 @@ class SelectorBIC(ModelSelector):
                     best_model= model
 
             except:
-                print("failure on {} @ {}".format(self.this_word, component))
+                print("failure on {} @ {}".format(self.this_word, component_num))
 
         return best_model
-        
-        
-        
-        
-        
+
+
+
+
+
 
 
 class SelectorDIC(ModelSelector):
@@ -147,38 +144,46 @@ class SelectorCV(ModelSelector):
 
 
         # initialize essential objects
-        split_method= KFold()
+        best_score= float("-inf") # initialize at lowest possible number
+        best_component_num= 1 # intialize at first component
+        best_model= None
 
         # outer loop iterating over components
-        for components in range(self.min_n_components, self.max_n_components + 1):
+        for component_num in range(self.min_n_components, self.max_n_components + 1):
 
+            # initialize storage container for cv scores
+            cv_scores= list()
             # grab essential objects
             word_sequences= self.sequences
             num_seqences= len(word_sequences) # count of word sequences
             n_splits= min(10, num_seqences) # 10 splits max, num_seqences splits min
-			
-			mean_scores= list() # create array to store mean cv scores from inner loop
-
+            
             try:
-                splitter= split_method(n_splits)
+                splitter= KFold(n_splits= n_splits)
             except:
                 return None
-
             # inner loop where CV takes place
-            try:			    
-			    for cv_train_idx, cv_test_idx in splitter.split(word_sequences):
-				    local_scores= list() # create array to store cv scores
-				    # use indices to get train and test set array and length
-				    cv_train_x, cv_train_length= combine_sequences(cv_train_idx, word_sequences)
-					cv_test_x, cv_test_length= combine_sequences(cv_test_idx, word_sequences)
-					# build a model using the cv traning data
-					cv_model= GaussianHMM(n_components=components, covariance_type="diag", n_iter=1000,
-                                    random_state=self.random_state, verbose=False).fit(cv_train_x, cv_train_length)
-					# get the model score (log likelihood) for the test fold
-					cv_score= cv_model.score(cv_test_x, cv_train_x)
-					local_scores.append(cv_score)
-					
+            try:
+                for cv_train_idx, cv_test_idx in splitter.split(word_sequences):
+                    # use indices to get train and test set array and length
+                    cv_train_x, cv_train_length= combine_sequences(cv_train_idx, word_sequences)
+                    cv_test_x, cv_test_length= combine_sequences(cv_test_idx, word_sequences)
+                    # build a model using the cv traning data
+                    cv_model= self.base_model(n_components=component_num).fit(cv_train_x, cv_train_length)
+                    # get the model score (log likelihood) for the test fold
+                    cv_score= cv_model.score(cv_test_x, cv_test_length)
+                    cv_scores.append(cv_score)
+
+            # get mean, update best score, extract best component number
+            
+                mean_scores= np.mean(cv_scores)
+                if mean_scores > best_score:
+                    mean_scores= best_score
+                    best_component_num= component_num
 
             except:
-                pass
+                print("failure on {} @ {}".format(self.this_word, component_num))
 
+        # get the best model
+        best_model= self.base_model(component_num)
+        return best_model
