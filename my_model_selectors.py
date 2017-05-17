@@ -145,5 +145,40 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection using CV
-        raise NotImplementedError
+
+        # initialize essential objects
+        split_method= KFold()
+
+        # outer loop iterating over components
+        for components in range(self.min_n_components, self.max_n_components + 1):
+
+            # grab essential objects
+            word_sequences= self.sequences
+            num_seqences= len(word_sequences) # count of word sequences
+            n_splits= min(10, num_seqences) # 10 splits max, num_seqences splits min
+			
+			mean_scores= list() # create array to store mean cv scores from inner loop
+
+            try:
+                splitter= split_method(n_splits)
+            except:
+                return None
+
+            # inner loop where CV takes place
+            try:			    
+			    for cv_train_idx, cv_test_idx in splitter.split(word_sequences):
+				    local_scores= list() # create array to store cv scores
+				    # use indices to get train and test set array and length
+				    cv_train_x, cv_train_length= combine_sequences(cv_train_idx, word_sequences)
+					cv_test_x, cv_test_length= combine_sequences(cv_test_idx, word_sequences)
+					# build a model using the cv traning data
+					cv_model= GaussianHMM(n_components=components, covariance_type="diag", n_iter=1000,
+                                    random_state=self.random_state, verbose=False).fit(cv_train_x, cv_train_length)
+					# get the model score (log likelihood) for the test fold
+					cv_score= cv_model.score(cv_test_x, cv_train_x)
+					local_scores.append(cv_score)
+					
+
+            except:
+                pass
+
