@@ -154,7 +154,7 @@ class SelectorDIC(ModelSelector):
                 for word in words_left:
                     X, lengths= self.hwords[word] # hwords is a dict with values of X and length for each key (word)
                     try:
-                        words_left_scores.append(model.score(X, length)) # log(P(X(i)) for this word
+                        words_left_scores.append(model.score(X, lengths)) # log(P(X(i)) for this word
                     except:
                         pass
 
