@@ -125,13 +125,59 @@ class SelectorDIC(ModelSelector):
     Document Analysis and Recognition, 2003. Proceedings. Seventh International Conference on. IEEE, 2003.
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.58.6208&rep=rep1&type=pdf
     DIC = log(P(X(i)) - 1/(M-1)SUM(log(P(X(all but i))
+    
+    Need to generate, do, and/or extract the following:
+    - log likelihood for the ith worth in array X
+        - sum of the log likelihoods for all words in array X except for the ith word
+        - divide the sum from the step above by columns - 1
+    - subtract this from the value in the first step    
     '''
 
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
+        
+        # initialize essential objects
+        best_score= float("-inf") # initialize at lowest possible number
+        best_model= None
+        # outer loop iterating over components
+        for component_num in range(self.min_n_components, self.max_n_components + 1):
+            words_left_scores= list()
 
-        # TODO implement model selection based on DIC scores
-        raise NotImplementedError
+            try:
+                model= self.base_model(component_num)
+                score= model.score(self.X, self.lengths) # log(P(X(i)) for this word
+                words= self.words # get all the words as dict with words as keys
+                # generate a dict of all words except ith word
+                words_left= words.copy() # copy the dict so we don't alter words dict
+                words_left.pop(self.this_word) # remove this word
+                # iterate over all the other words and sum up P (logL)
+                for word in words_left:
+                    X, lengths= self.hwords[word] # hwords is a dict with values of X and length for each key (word)
+                    try:
+                        words_left_scores.append(model.score(X, length)) # log(P(X(i)) for this word
+                    except:
+                        pass
+
+                # put it all together
+                M= len(words_left)
+                words_left_score= np.sum(words_left_scores)
+                normalized_words_left_score= words_left_score/M
+
+                # update best score
+                DIC= score - words_left_score
+                if DIC > best_score:
+                    best_score= DIC
+                    best_model= model
+            except:
+                pass
+        return best_model
+                
+            
+           
+            
+            
+
+        
 
 
 class SelectorCV(ModelSelector):
