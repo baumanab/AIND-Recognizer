@@ -230,7 +230,8 @@ class SelectorCV(ModelSelector):
                     best_component_num= component_num
 
             except:
-                print("failure on {} @ {}".format(self.this_word, component_num))
+                #print("failure on {} @ {}".format(self.this_word, component_num))
+                pass
 
         # get the best model
         best_model= self.base_model(component_num)
