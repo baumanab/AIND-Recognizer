@@ -1,0 +1,17 @@
+Feature Set,Selector,Number Correct,WER (%)
+ground,Constant,59,67
+ground,BIC,80,55
+ground,DIC,77,57
+ground,CV,73,59
+custom,Constant,81,54
+custom,BIC,81,54
+custom,DIC,65,63
+custom,CV,72,60
+delta,Constant,66,63
+delta,BIC,71,60
+delta,DIC,60,66
+delta,CV,65,63
+polar,Constant,68,62
+polar,BIC,81,54
+polar,DIC,73,59
+polar,CV,80,55
