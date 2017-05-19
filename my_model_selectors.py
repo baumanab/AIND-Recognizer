@@ -43,7 +43,8 @@ class ModelSelector(object):
             return hmm_model
         except:
             if self.verbose:
-                print("failure on {} with {} states".format(self.this_word, num_states))
+                #print("failure on {} with {} states".format(self.this_word, num_states))
+                pass
             return None
 
 
@@ -108,7 +109,8 @@ class SelectorBIC(ModelSelector):
                     best_model= model
 
             except:
-                print("failure on {} @ {}".format(self.this_word, component_num))
+                #print("failure on {} @ {}".format(self.this_word, component_num))
+                pass
 
         return best_model
 
